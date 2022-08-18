@@ -20,9 +20,17 @@ def space(num_lines=1):
     for _ in range(num_lines):
         st.write("")
      
-
 #Load data from server sql     
-sql_conn = pyodbc.connect('DRIVER={SQL Server};SERVER=whcdbs01;DATABASE=productionScrap;Trusted_Connection=yes')
+sql_conn = pyodbc.connect("DRIVER={SQL Server};SERVER="
+                + st.Secrets["server"]
+                + ";DATABASE="
+                + st.Secrets["database"]
+                + ";UID="
+                + st.Secrets["username"]
+                + ";PWD" 
+                + st.Secrets["password"]
+                + ";Trusted_Connection=yes"
+            )
 
 query_prod = f'SELECT * FROM productionData WHERE createdOn >= CAST(\'{get_time_filter(datetime.now())}\' AS DATE)'
 query_scrap = f'SELECT DISTINCT ProductionScrap.dbo.scrapData.*, M2MDATA03.dbo.ladetail.fpro_id \
