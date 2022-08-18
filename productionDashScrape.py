@@ -1,12 +1,9 @@
-from turtle import right
 import streamlit as st
 import pandas as pd
 import pyodbc
 from datetime import datetime, timedelta
-import plotly.graph_objs as go
 import plotly.express as px
 from PIL import Image
-import altair as alt
 import time
 
 #determine current time and what shift is going
