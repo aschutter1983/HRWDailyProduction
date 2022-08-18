@@ -33,7 +33,7 @@ def space(num_lines=1):
 #                 + ";Trusted_Connection=yes"
 #             )
 
-sql_conn = pyodbc.connect("DRIVER={SQL Server};SERVER=10.1.0.33;DATABASE=productionScrap,uid=aschutter;pwd=Freckles01;Trusted_Connection=yes;")
+sql_conn = pyodbc.connect("DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.1.0.33;DATABASE=productionScrap,uid=aschutter;pwd=Freckles01;Trusted_Connection=yes;")
 
 query_prod = f'SELECT * FROM productionData WHERE createdOn >= CAST(\'{get_time_filter(datetime.now())}\' AS DATE)'
 query_scrap = f'SELECT DISTINCT ProductionScrap.dbo.scrapData.*, M2MDATA03.dbo.ladetail.fpro_id \
