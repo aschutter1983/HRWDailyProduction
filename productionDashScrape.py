@@ -35,16 +35,33 @@ def space(num_lines=1):
 
 sql_conn = pyodbc.connect("DRIVER={ODBC Driver 17 for SQL Server};SERVER=whcdbs01;DATABASE=productionScrap;Trusted_Connection=yes;")
 
-query_prod = f'SELECT * FROM productionData WHERE createdOn >= CAST(\'{get_time_filter(datetime.now())}\' AS DATE)'
-query_scrap = f'SELECT DISTINCT ProductionScrap.dbo.scrapData.*, M2MDATA03.dbo.ladetail.fpro_id \
-                    FROM ProductionScrap.dbo.scrapData INNER JOIN M2MDATA03.dbo.ladetail \
-                    ON ProductionScrap.dbo.scrapData.fjobno = M2MDATA03.dbo.ladetail.fjobno \
-                    WHERE createdOn >= CAST(\'{get_time_filter(datetime.now())}\' AS DATE)'
+query_prod = f'SELECT DISTINCT ProductionScrap.dbo.productionData.*, M2MDATA03.dbo.inmastx.fnusrqty1, M2MDATA03.dbo.inmastx.fnweight, \
+               CASE \
+               WHEN DATEPART(hour,cast(ProductionScrap.dbo.productiondata.createdOn as datetime)) <= 4 \
+                THEN FORMAT(cast(ProductionScrap.dbo.productiondata.createdOn as datetime)-1,\'MM/dd/yyyy\') \
+                ELSE FORMAT(cast(ProductionScrap.dbo.productiondata.createdOn  as datetime),\'MM/dd/yyyy\') \
+		        END as shiftDate \
+                FROM ProductionScrap.dbo.productionData \
+                INNER JOIN M2MDATA03.dbo.jomast ON M2MDATA03.dbo.jomast.fjobno = ProductionScrap.dbo.productiondata.fjobno \
+                INNER JOIN M2MDATA03.dbo.inmastx ON M2MDATA03.dbo.jomast.fpartno = M2MDATA03.dbo.inmastx.fpartno \
+                WHERE createdOn >= CAST(\'{get_time_filter(datetime.now())}\' AS DATE)'
+             
+query_scrap = f'SELECT DISTINCT ProductionScrap.dbo.scrapData.*, M2MDATA03.dbo.ladetail.fpro_id, \
+                CASE \
+                WHEN DATEPART(hour,cast(ProductionScrap.dbo.scrapData.createdOn as datetime)) <= 4 \
+                THEN FORMAT(cast(ProductionScrap.dbo.scrapData.createdOn as datetime)-1,\'MM/dd/yyyy\') \
+                ELSE FORMAT(cast(ProductionScrap.dbo.scrapData.createdOn  as datetime),\'MM/dd/yyyy\') \
+ 		        END as shiftDate \
+                FROM ProductionScrap.dbo.scrapData INNER JOIN M2MDATA03.dbo.ladetail \
+                ON ProductionScrap.dbo.scrapData.fjobno = M2MDATA03.dbo.ladetail.fjobno \
+                WHERE createdOn >= CAST(\'{get_time_filter(datetime.now())}\' AS DATE)'
 
 df_production_today = pd.read_sql(query_prod, sql_conn)
 df_production_today['Type']='Production'
+df_production_today = df_production_today[(df_production_today['shiftDate'] == datetime.now().strftime('%m/%d/%Y'))]
 df_scrap_today =pd.read_sql(query_scrap, sql_conn)
 df_scrap_today['Type']='Scrap'
+df_scrap_today = df_scrap_today[(df_scrap_today['shiftDate'] == datetime.now().strftime('%m/%d/%Y'))]
 #rename fpro_id col
 df_scrap_today.rename(columns={'fpro_id': 'workCenter','scrapQty':'Qty'}, inplace=True)
 df_production_today.rename(columns={'productionQty':'Qty'}, inplace=True)
